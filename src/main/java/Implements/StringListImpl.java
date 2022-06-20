@@ -111,6 +111,7 @@ public class StringListImpl implements StringList {
 
     @Override
     public int size() {
+
         return size;
     }
 
