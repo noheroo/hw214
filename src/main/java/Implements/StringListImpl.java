@@ -1,85 +1,87 @@
 package Implements;
 
-import Data.StringListElements;
-import Exceptions.ArrayIsFullException;
-import Exceptions.BadIndexException;
-import Exceptions.ItemNotFoundException;
-import Exceptions.ThisCellIsNotEmptyException;
+import Exceptions.*;
 import Interfaces.StringList;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 public class StringListImpl implements StringList {
+    private final String[] strings;
+    private int size;
 
-    StringListElements strings = new StringListElements(0);
+    public StringListImpl() {
+        strings = new String[5];
+    }
+
+    public StringListImpl(int initSize) {
+        strings = new String[initSize];
+    }
 
 
     @Override
     public String add(String item) {
-        for (int i = 0; i < strings.length(); i++) {
-            if (strings.getElement(i) == null) {
-                strings.setElement(i, item);
-                return item;
-            }
-        }
-        throw new ArrayIsFullException();
+        validateSize();
+        validateItem(item);
+        strings[size++] = item;
+        return item;
     }
 
     @Override
     public String add(int index, String item) {
-        if (index > strings.length()) {
-            throw new BadIndexException();
-        }
-        if (strings.getElement(index) == null) {
-            strings.setElement(index, item);
+        validateSize();
+        validateItem(item);
+        validateIndex(index);
+
+        if (index == size) {
+            strings[size++] = item;
             return item;
-        } else {
-            throw new ThisCellIsNotEmptyException();
         }
+        System.arraycopy(strings, index, strings, index + 1, size - index);
+        strings[index] = item;
+        size++;
+        return item;
     }
 
     @Override
     public String set(int index, String item) {
-        if (index > strings.length() && index > size()) {
-            throw new BadIndexException();
-        }
-        strings.setElement(index, item);
+        validateIndex(index);
+        validateItem(item);
+        strings[index] = item;
         return item;
     }
 
     @Override
     public String remove(String item) {
-        for (int i = 0; i < strings.length(); i++) {
-            if (strings.getElement(i).equals(item)) {
-                return strings.setElement(i, null);
-            }
-        }
-        throw new ItemNotFoundException();
+        validateItem(item);
+
+        int index = indexOf(item);
+
+        return remove(index);
+
     }
 
     @Override
     public String remove(int index) {
-        if (index > size()) {
-            throw new BadIndexException();
+        validateIndex(index);
+
+        String item = strings[index];
+
+        if (index != size) {
+            System.arraycopy(strings, index + 1, strings, index, size - index);
         }
-        return strings.setElement(index, null);
+        size--;
+        return item;
     }
 
     @Override
     public boolean contains(String item) {
-        for (int i = 0; i < strings.length(); i++) {
-            if (strings.getElement(i).equals(item)) {
-                return true;
-            }
-        }
-        return false;
+        return indexOf(item) != -1;
     }
 
     @Override
     public int indexOf(String item) {
-        for (int i = 0; i < strings.length(); i++) {
-            if (strings.getElement(i).equals(item)) {
+        for (int i = 0; i < size; i++) {
+            if (strings[i].equals(item)) {
                 return i;
             }
         }
@@ -88,8 +90,8 @@ public class StringListImpl implements StringList {
 
     @Override
     public int lastIndexOf(String item) {
-        for (int i = strings.length(); i >= 0; i--) {
-            if (strings.getElement(i).equals(item)) {
+        for (int i = size - 1; i >= 0; i--) {
+            if (strings[i].equals(item)) {
                 return i;
             }
         }
@@ -98,57 +100,50 @@ public class StringListImpl implements StringList {
 
     @Override
     public String get(int index) {
-        if (index > size()) {
-            throw new BadIndexException();
-        }
-        return strings.getElement(index);
+        validateIndex(index);
+        return strings[index];
     }
 
     @Override
     public boolean equals(StringList otherList) {
-        return false;
+        return Arrays.equals(this.toArray(), otherList.toArray());
     }
 
     @Override
     public int size() {
-        int quantity = 0;
-        for (int i = 0; i < strings.length(); i++) {
-            if (strings.getElement(i) != null) {
-                quantity++;
-            }
-        }
-        return quantity;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        int quantity = 0;
-        for (int i = 0; i < strings.length(); i++) {
-            if (strings.getElement(i) != null) {
-                quantity++;
-            }
-        }
-        if (quantity == 0) {
-            return true;
-        }
-        return false;
+        return size == 0;
     }
 
     @Override
     public void clear() {
-        for (int i = 0; i < strings.length(); i++) {
-            strings.setElement(i, null);
-        }
+        size = 0;
     }
 
     @Override
     public String[] toArray() {
-        return null;
+        return Arrays.copyOf(strings, size);
     }
 
-    public void printAll() {
-        for (int i = 0; i < strings.length(); i++) {
-            System.out.println(strings.getElement(i));
+    private void validateItem(String item) {
+        if (item == null) {
+            throw new ItemIsNullException();
+        }
+    }
+
+    private void validateSize() {
+        if (size == strings.length) {
+            throw new ArrayIsFullException();
+        }
+    }
+
+    public void validateIndex(int index) {
+        if (index < 0 || index > size) {
+            throw new BadIndexException();
         }
     }
 }
